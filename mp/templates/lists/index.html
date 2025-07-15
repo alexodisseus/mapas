@@ -1,0 +1,26 @@
+{% extends "base.html" %}
+
+{% block styles %}
+    <link rel="stylesheet" href="{{ url_for('static', filename='index.css') }}">
+    <link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet">
+{% endblock %}
+
+{% block content %}
+    <h3>Pavilhões:</h3>
+
+    <!-- Lista de pavilhões -->
+    <ul class="list" id="list">
+        {% for pavilhao in data %}
+            <li>
+                <a href="{{ url_for('lists.list_mapas', id_pavilhao=pavilhao.id) }}">
+                    {{ pavilhao.nome }}
+                </a>
+            </li>
+        {% endfor %}
+    </ul>
+
+    <!-- Botão de adição -->
+    <div class="add-button" id="addButton">
+        <span class="material-icons">add</span> Criar nova lista
+    </div>
+{% endblock %}

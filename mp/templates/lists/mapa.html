@@ -1,0 +1,41 @@
+{% extends "base.html" %}
+
+{% block content %}
+<h3>Mapa do Pavilhão: {{ data.nome }}</h3>
+
+{% if data.ilhas_colunas %}
+    {% for ilha in data.ilhas_colunas %}
+        <h4>{{ ilha.nome }}</h4>
+
+        <table border="1" cellpadding="5" cellspacing="0">
+            <thead>
+                <tr>
+                    <th>Banca</th>
+                    <th>Contrato</th>
+                    <th>Permissionário</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% if ilha.bancas %}
+                    {% for banca in ilha.bancas %}
+                        <tr>
+                            <td>{{ banca.nome }}</td>
+                            <td>{{ banca.tipo }}</td>
+                            <td>{{ banca.permissionario }}</td>
+                        </tr>
+                    {% endfor %}
+                {% else %}
+                    <tr>
+                        <td colspan="3"><em>Nenhuma banca cadastrada</em></td>
+                    </tr>
+                {% endif %}
+            </tbody>
+        </table>
+        <br>
+    {% endfor %}
+{% else %}
+    <p>Nenhuma ilha/coluna cadastrada para este pavilhão.</p>
+{% endif %}
+
+<a href="{{ url_for('lists.list_lists') }}">← Voltar</a>
+{% endblock %}

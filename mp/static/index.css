@@ -1,0 +1,200 @@
+/* Geral */
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+    font-family: 'Roboto', sans-serif; /* Tipografia limpa e moderna */
+}
+
+html, body {
+    height: 100%;
+    background-color: #f5f5f5; /* Cor de fundo bem clara e suave */
+    color: #333; /* Texto em cinza escuro */
+}
+
+body {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    font-size: 16px;
+}
+
+/* Container Principal */
+.container {
+    width: 100%;
+    max-width: 600px; /* Largura máxima para manter o layout limpo */
+    padding: 20px;
+    background-color: #ffffff; /* Fundo branco para o conteúdo */
+    border-radius: 8px; /* Bordas arredondadas */
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1); /* Sombra suave para destacar */
+}
+
+/* Cabeçalho */
+.header {
+    text-align: center;
+    margin-bottom: 30px;
+}
+
+.header h1 {
+    font-size: 24px;
+    color: #1a73e8; /* Cor suave do Google */
+    font-weight: 500;
+}
+
+/* Estilo do formulário */
+form {
+    display: flex;
+    flex-direction: column;
+    gap: 16px; /* Espaçamento entre os campos */
+}
+
+input[type="text"], input[type="date"], button {
+    width: 100%;
+    padding: 12px;
+    border-radius: 4px;
+    border: 1px solid #ddd;
+    font-size: 16px;
+    color: #999; /* Cor dos placeholders */
+}
+
+input[type="text"]:focus, input[type="date"]:focus {
+    border-color: #1a73e8; /* Cor de foco nos campos */
+    outline: none;
+    color: #999; /* Cor dos placeholders */
+}
+
+button {
+    background-color: #1a73e8; /* Cor do botão */
+    color: white;
+    border: none;
+    cursor: pointer;
+    font-size: 16px;
+    font-weight: 500;
+    transition: background-color 0.3s ease;
+}
+
+button:hover {
+    background-color: #1558b0; /* Cor mais escura quando hover */
+}
+
+button:focus {
+    outline: none;
+}
+
+/* Estilos adicionais */
+input::placeholder {
+    color: #999; /* Cor dos placeholders */
+}
+
+/* Responsividade */
+@media (max-width: 600px) {
+    .container {
+        padding: 16px;
+    }
+    .header h1 {
+        font-size: 20px;
+    }
+}
+/* Reset de estilo básico */
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+    font-family: 'Roboto', sans-serif;
+}
+
+html, body {
+    height: 100%;
+    background-color: #f5f5f5; /* Cor de fundo suave */
+    color: #333; /* Texto em cinza escuro */
+}
+
+body {
+    display: flex;
+    justify-content: center;
+    align-items: flex-start;
+    font-size: 16px;
+    padding: 20px;
+}
+
+.container {
+    width: 100%;
+    max-width: 800px; /* Largura máxima para evitar que a página fique muito larga */
+    padding: 20px;
+    background-color: #fff; /* Fundo branco para o conteúdo */
+    border-radius: 8px; /* Bordas arredondadas */
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1); /* Sombra suave para destacar */
+}
+
+/* Estilo do título */
+h3 {
+    font-size: 24px;
+    font-weight: 500;
+    color: #1a73e8; /* Cor do título */
+    margin-bottom: 20px;
+}
+
+/* Estilos da lista */
+ul.list {
+    list-style: none;
+    padding: 0;
+    margin: 0;
+}
+
+ul.list li {
+    padding: 12px;
+    background-color: #f9f9f9;
+    border-radius: 4px;
+    border: 1px solid #ddd;
+    margin-bottom: 10px;
+    font-size: 16px;
+    color: #555;
+}
+
+ul.list li.empty-list {
+    color: #999; /* Cor mais suave para a mensagem de lista vazia */
+    text-align: center;
+}
+
+/* Botão de adicionar */
+.add-button {
+    margin-top: 20px;
+    display: flex;
+    justify-content: center;
+}
+
+.add-button-link {
+    display: flex;
+    align-items: center;
+    background-color: #1a73e8; /* Cor de fundo azul */
+    color: white;
+    text-decoration: none;
+    padding: 12px 20px;
+    border-radius: 4px;
+    font-size: 16px;
+    font-weight: 500;
+    transition: background-color 0.3s ease;
+}
+
+.add-button-link:hover {
+    background-color: #1558b0; /* Cor mais escura ao passar o mouse */
+}
+
+.add-button-link .material-icons {
+    margin-right: 8px; /* Espaço entre o ícone e o texto */
+}
+
+/* Responsividade */
+@media (max-width: 600px) {
+    .container {
+        padding: 16px;
+    }
+
+    h3 {
+        font-size: 20px;
+    }
+
+    ul.list li {
+        font-size: 14px;
+    }
+}

@@ -1,0 +1,155 @@
+from flask import Flask
+from flask import Blueprint, render_template, request, session, redirect, url_for, flash
+
+import model
+
+from datetime import datetime
+from werkzeug.utils import secure_filename
+from io import StringIO
+import csv
+import os
+
+
+ALLOWED_EXTENSIONS = {'csv'}
+UPLOAD_FOLDER = 'uploads'
+os.makedirs(UPLOAD_FOLDER, exist_ok=True)
+
+
+
+from flask import Flask, Blueprint, render_template, request, redirect, url_for, flash
+
+lists = Blueprint('lists', __name__, url_prefix='/')
+
+# Suponha que temos uma lista de dicionários para simular um banco de dados
+
+
+
+ALLOWED_EXTENSIONS = {'csv'}
+
+def allowed_file(filename):
+    return '.' in filename and \
+           filename.rsplit('.', 1)[1].lower() in ALLOWED_EXTENSIONS
+
+
+
+# Rota para exibir todas as listas (List)
+@lists.route('/')
+def list_lists():
+    data = model.list_all_mapas()
+    return render_template('lists/index.html' , data=data)
+    
+@lists.route('/mapa/<int:id_pavilhao>')
+def list_mapas(id_pavilhao):
+    data = model.get_mapa_by_pavilhao(id_pavilhao)
+    return render_template('lists/mapa.html', data=data)
+
+
+@lists.route('enviar/')
+def list_send():
+
+    return render_template('lists/send.html' )
+
+
+
+@lists.route('/add/', methods=['GET', 'POST'])
+def list_add():
+    if request.method == 'POST':
+        # Verificação básica do arquivo
+        if 'csv_file' not in request.files:
+            flash('Nenhum arquivo enviado', 'error')
+            return redirect(request.url)
+            
+        file = request.files['csv_file']
+        
+        if file.filename == '':
+            flash('Nenhum arquivo selecionado', 'error')
+            return redirect(request.url)
+            
+        if not allowed_file(file.filename):
+            flash('Tipo de arquivo não permitido. Envie apenas CSV.', 'error')
+            return redirect(request.url)
+        
+        try:
+            # Lê o conteúdo bruto do arquivo
+            raw_data = file.read()
+            file.seek(0)  # Reset file pointer
+            
+            # Lista de codificações para tentar (em ordem de probabilidade)
+            encodings_to_try = ['iso-8859-1', 'windows-1252', 'cp1252']
+            
+            content = None
+            for encoding in encodings_to_try:
+                try:
+                    content = raw_data.decode(encoding)
+                    break  # Se decodificar com sucesso, para o loop
+                except UnicodeDecodeError:
+                    continue
+            
+            if content is None:
+                flash('Não foi possível determinar a codificação do arquivo', 'error')
+                return redirect(request.url)
+            
+            # Processa o CSV
+            csv_data = []
+            with StringIO(content) as stream:
+                csv_reader = csv.reader(stream , delimiter=';')
+                next(csv_reader)
+                for row in csv_reader:
+                    
+                    resultado = [item for linha in row for item in linha.split(';')]
+
+                    data = resultado
+                    csv_data.append(data)
+                    
+                    if data[11] == "Ocupada":
+                        asd = model.cadastrar_banca(data[3], data[6], data[7], data[12], data[14])
+
+                        print(data[3], data[6], data[7], data[12], data[14])
+
+            # Salva o arquivo temporariamente (opcional)
+            filename = secure_filename(file.filename)
+            temp_path = os.path.join(UPLOAD_FOLDER, filename)
+            file.save(temp_path)
+            
+            flash(f'Arquivo processado com sucesso! {len(csv_data)} linhas importadas.', 'success')
+            
+            # Mostra as primeiras 10 linhas no template (opcional)
+            return render_template('lists/send.html',
+                               rows=csv_data[:10],
+                               filename=filename)
+            
+        except csv.Error as e:
+            flash(f'Erro no formato CSV: {str(e)}', 'error')
+        except Exception as e:
+            flash(f'Erro ao processar arquivo: {str(e)}', 'error')
+        
+        return redirect(request.url)
+    
+    # GET request
+    return render_template('lists/send.html')
+
+def allowed_file(filename):
+    """Verifica se a extensão é permitida"""
+    return '.' in filename and \
+           filename.rsplit('.', 1)[1].lower() in ALLOWED_EXTENSIONS
+
+@lists.route('/cadastrar', methods=['GET', 'POST'])
+def create_list():
+        
+
+
+    asd = model.cadastrar_banca( "MLP - V.SABADO", "ILHA - 34", "17", "AU FATURA", "MOHAMED COMÉRCIO DE FRUTAS LTDA.")    
+    return redirect(url_for('lists.list_lists'))
+    
+    
+
+
+# Função para configurar o blueprint
+def configure(app):
+    app.register_blueprint(lists)
+
+
+
+
+
+

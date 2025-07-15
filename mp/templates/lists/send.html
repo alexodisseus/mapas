@@ -1,0 +1,32 @@
+{% extends "base.html" %}
+
+{% block styles %}
+    <link rel="stylesheet" href="{{ url_for('static', filename='index.css') }}">
+    <!-- Adicionando Material Icons -->
+    <link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet">
+{% endblock %}
+
+{% block content %}
+    <h3>Enviar arquivo CSV:</h3>
+
+    <!-- Formulário de upload -->
+    <form method="POST" action="{{ url_for('lists.list_add') }}" enctype="multipart/form-data" class="upload-form">
+        <div class="file-input-container">
+            <label for="csv-upload" class="file-label">
+                <span class="material-icons">upload</span>
+                <span id="file-name">Selecione um arquivo CSV</span>
+            </label>
+            <input type="file" id="csv-upload" name="csv_file" accept=".csv" required>
+        </div>
+        <button type="submit" class="submit-button">
+            <span class="material-icons">send</span> Enviar
+        </button>
+    </form>
+
+    <hr>
+
+    <!-- Botão de adição -->
+    <div class="add-button" id="addButton">
+        <span class="material-icons">add</span> Criar nova lista
+    </div>
+{% endblock %}
