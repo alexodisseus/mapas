@@ -3,24 +3,62 @@
 {% block styles %}
     <link rel="stylesheet" href="{{ url_for('static', filename='index.css') }}">
     <link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet">
+
+    <style>
+        .list {
+            list-style: none;
+            padding: 0;
+        }
+
+        .list li {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            border-bottom: 1px solid #ccc;
+            padding: 6px 0;
+        }
+
+        .button-group {
+            display: flex;
+            gap: 8px;
+        }
+
+        .button-group a,
+        .button-group button {
+            background: transparent;
+            border: none;
+            color: #007BFF;
+            font-size: 0.9em;
+            cursor: pointer;
+            text-decoration: underline;
+            padding: 2px 6px;
+        }
+
+        .button-group a:hover,
+        .button-group button:hover {
+            color: #0056b3;
+        }
+    </style>
 {% endblock %}
 
 {% block content %}
     <h3>Pavilhões:</h3>
 
-    <!-- Lista de pavilhões -->
     <ul class="list" id="list">
         {% for pavilhao in data %}
             <li>
-                <a href="{{ url_for('lists.list_mapas', id_pavilhao=pavilhao.id) }}">
-                    {{ pavilhao.nome }}
-                </a>
+                <span>{{ pavilhao.nome }}</span>
+                <div class="button-group">
+                    <a href="{{ url_for('lists.list_frequencia', id_pavilhao=pavilhao.id) }}">Frequência</a>
+                    <a href="{{ url_for('lists.list_mapas', id_pavilhao=pavilhao.id) }}">Mapa</a>
+                </div>
             </li>
         {% endfor %}
     </ul>
 
-    <!-- Botão de adição -->
     <div class="add-button" id="addButton">
-        <span class="material-icons">add</span> Criar nova lista
+        <a href="{{ url_for('lists.list_send') }}">
+            <span class="material-icons">add</span> Criar nova lista
+        </a>
     </div>
 {% endblock %}

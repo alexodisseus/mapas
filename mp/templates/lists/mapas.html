@@ -1,0 +1,37 @@
+{% extends "base.html" %}
+
+{% block styles %}
+    <link rel="stylesheet" href="{{ url_for('static', filename='index.css') }}">
+    <link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet">
+
+{% endblock %}
+
+{% block content %}
+	
+<div class="content-area">
+    <h3>mapas
+    <button >
+            <span class="material-icons" style="font-size: 16px;">edit</span> Editar
+        </button>
+    </h3>
+    {% for ilha in data %}
+    <h4>{{ ilha.nome }}</h4>
+
+    <table class="grid-map">
+        <tbody>
+            {% for linha in range(10) %}
+                <tr>
+                    {% for coluna in range(20) %}
+                        <td>{{coluna}}
+                            <!-- Aqui você pode checar se existe um mapa correspondente a linha/coluna -->
+                        </td>
+                    {% endfor %}
+                </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+    <br>
+{% endfor %}
+
+</div>
+{% endblock %}

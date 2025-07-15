@@ -198,3 +198,27 @@ ul.list li.empty-list {
         font-size: 14px;
     }
 }
+
+.content-area {
+    flex: 1;
+    padding: 20px;
+}
+
+.mapa-tabela {
+    margin-bottom: 32px;
+    position: relative;
+}
+
+
+table.grid-map {
+    border-collapse: collapse;
+    width: 100%;
+}
+
+table.grid-map td, table.grid-map th {
+    border: 1px solid #ccc;
+    width: 5%;
+    height: 30px;
+    text-align: center;
+    font-size: 0.75em;
+}

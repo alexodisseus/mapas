@@ -14,19 +14,18 @@ class Pavilhao(db.Model):
         return f'<Pavilhao {self.nome}>'
 
 
-
 class IlhaColuna(db.Model):
     __tablename__ = 'ilhas_colunas'
 
     id = db.Column(db.Integer, primary_key=True)
     nome = db.Column(db.String(100), nullable=False)
+    #totaldebancas = db.Column(db.Integer, default=0)  # Nova coluna
 
     pavilhao_id = db.Column(db.Integer, db.ForeignKey('pavilhoes.id'), nullable=False)
     pavilhao = db.relationship('Pavilhao', backref=db.backref('ilhas_colunas', lazy=True))
 
     def __repr__(self):
         return f'<IlhaColuna {self.nome} - Pavilhao ID: {self.pavilhao_id}>'
-
 
 
 class Banca(db.Model):
@@ -44,8 +43,28 @@ class Banca(db.Model):
         return f'<Banca {self.nome} - IlhaColuna ID: {self.ilha_coluna_id}>'
 
 
+class Mapa(db.Model):
+    __tablename__ = 'mapas'
 
-def cadastrar_banca(pavilhao_nome, ilha_coluna_nome, banca_nome, tipo_contrato, nome_permissionario):
+    id = db.Column(db.Integer, primary_key=True)
+    
+    nome = db.Column(db.String(100), nullable=False)  # Nome é requerido
+
+    banca_id = db.Column(db.Integer, db.ForeignKey('bancas.id'), nullable=True)
+    banca = db.relationship('Banca', backref=db.backref('mapas', lazy=True))
+
+    coluna = db.Column(db.String(20), nullable=True)
+    linha = db.Column(db.String(20), nullable=True)
+    cor = db.Column(db.String(20), nullable=True)
+    tipo = db.Column(db.String(50), nullable=True)
+
+    def __repr__(self):
+        return f'<Mapa {self.nome} - ID: {self.id}, Banca: {self.banca_id}>'
+
+
+
+
+def cadastrar_banca(pavilhao_nome, ilha_coluna_nome, banca_nome, tipo_contrato, nome_permissionario, status):
     # Buscar ou criar o pavilhão
     pavilhao = Pavilhao.query.filter_by(nome=pavilhao_nome).first()
     if not pavilhao:
@@ -63,7 +82,12 @@ def cadastrar_banca(pavilhao_nome, ilha_coluna_nome, banca_nome, tipo_contrato, 
     # Verificar se a banca já existe
     banca_existente = Banca.query.filter_by(nome=banca_nome, ilha_coluna_id=ilha.id).first()
     if banca_existente:
-        return banca_existente  # Opcional: ou retorne None, ou levante exceção
+        return banca_existente
+
+    # Ajustar o permissionário com base no status
+    if status.strip().lower() != 'ocupada':
+        nome_permissionario = 'Liberada'
+        tipo_contrato = ''
 
     # Criar a banca
     banca = Banca(
@@ -73,6 +97,10 @@ def cadastrar_banca(pavilhao_nome, ilha_coluna_nome, banca_nome, tipo_contrato, 
         ilha_coluna_id=ilha.id
     )
     db.session.add(banca)
+
+    # Atualizar total de bancas da ilha
+    ilha.totaldebancas = db.session.query(Banca).filter_by(ilha_coluna_id=ilha.id).count() + 1
+
     db.session.commit()
     return banca
 
@@ -82,5 +110,9 @@ def list_all_mapas():
     return Pavilhao.query.all()
 
 
-def get_mapa_by_pavilhao(id_pavilhao):
+def get_mapas():
+    return IlhaColuna.query.all()
+
+    
+def get_frequencia_by_pavilhao(id_pavilhao):
     return Pavilhao.query.get(id_pavilhao)

@@ -38,10 +38,25 @@ def list_lists():
     data = model.list_all_mapas()
     return render_template('lists/index.html' , data=data)
     
+@lists.route('/frequencia/<int:id_pavilhao>')
+def list_frequencia(id_pavilhao):
+    data = model.get_frequencia_by_pavilhao(id_pavilhao)
+    return render_template('lists/frequencia.html', data=data)
+
+
 @lists.route('/mapa/<int:id_pavilhao>')
 def list_mapas(id_pavilhao):
-    data = model.get_mapa_by_pavilhao(id_pavilhao)
-    return render_template('lists/mapa.html', data=data)
+    data = model.get_mapas()
+    return render_template('lists/mapas.html', data=data)
+
+
+
+@lists.route('/mapa/editar/<int:id_ilhacoluna>')
+def list_mapas_editar(id_ilhacoluna):
+    data = model.get_mapa_by_ilhacoluna(id_ilhacoluna)
+    return render_template('lists/_mapas_editar.html', data=data)
+
+
 
 
 @lists.route('enviar/')
@@ -101,10 +116,10 @@ def list_add():
                     data = resultado
                     csv_data.append(data)
                     
-                    if data[11] == "Ocupada":
-                        asd = model.cadastrar_banca(data[3], data[6], data[7], data[12], data[14])
+                    
+                    asd = model.cadastrar_banca(data[3], data[6], data[7], data[12], data[14] , data[11])
 
-                        print(data[3], data[6], data[7], data[12], data[14])
+                    print(data[3], data[6], data[7], data[12], data[14], data[11])
 
             # Salva o arquivo temporariamente (opcional)
             filename = secure_filename(file.filename)
