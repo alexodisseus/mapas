@@ -222,3 +222,116 @@ table.grid-map td, table.grid-map th {
     text-align: center;
     font-size: 0.75em;
 }
+
+
+
+
+
+
+
+table.frequencia {
+    border-collapse: collapse;
+    width: 100%;
+    font-size: 14px;
+    table-layout: fixed; /* Isso é ESSENCIAL */
+}
+
+/* Definição EXPLÍCITA das larguras das colunas */
+table.frequencia thead th:nth-child(1) { width: 60%; }
+table.frequencia thead th:nth-child(2) { width: 20%; }
+table.frequencia thead th:nth-child(3) { width: 20%; }
+
+/* Estilo para todas as células */
+table.frequencia th,
+table.frequencia td {
+    border: 1px solid #000;
+    padding: 6px 8px;
+    text-align: left;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+/* Estilos específicos */
+table.frequencia th {
+    text-align: center;
+}
+
+tr.ilha-header td {
+    background-color: #e0e0e0;
+}
+
+td.permissionario, td.bancas, td.venc {
+    vertical-align: top;
+}
+
+
+
+
+
+
+
+
+
+
+
+
+
+        .list {
+            list-style: none;
+            padding: 0;
+        }
+
+        .list li {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            border-bottom: 1px solid #ccc;
+            padding: 6px 0;
+        }
+
+        .button-group {
+            display: flex;
+            gap: 8px;
+        }
+
+        .button-group a,
+        .button-group button {
+            background: transparent;
+            border: none;
+            color: #007BFF;
+            font-size: 0.9em;
+            cursor: pointer;
+            text-decoration: underline;
+            padding: 2px 6px;
+        }
+
+        .button-group a:hover,
+        .button-group button:hover {
+            color: #0056b3;
+        }
+
+
+
+
+
+table.grid-bancas {
+    border-collapse: collapse;
+    width: 100%;
+}
+
+table.grid-bancas td, table.grid-bancas th {
+    border: 1px solid #ccc;
+    
+    height: 30px;
+    text-align: center;
+    font-size: 0.75em;
+}
+.perm {
+    border: 1px solid #ccc;
+    
+    height: 30px;
+    text-align: left !important;
+    padding-left: 5px;
+    font-size: 0.75em;
+}

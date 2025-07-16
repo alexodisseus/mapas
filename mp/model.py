@@ -1,5 +1,10 @@
 from flask_sqlalchemy import SQLAlchemy
 
+
+from sqlalchemy import cast, Integer
+
+
+
 db = SQLAlchemy()
 
 
@@ -47,8 +52,7 @@ class Mapa(db.Model):
     __tablename__ = 'mapas'
 
     id = db.Column(db.Integer, primary_key=True)
-    
-    nome = db.Column(db.String(100), nullable=False)  # Nome é requerido
+    nome = db.Column(db.String(100), nullable=False)
 
     banca_id = db.Column(db.Integer, db.ForeignKey('bancas.id'), nullable=True)
     banca = db.relationship('Banca', backref=db.backref('mapas', lazy=True))
@@ -58,9 +62,11 @@ class Mapa(db.Model):
     cor = db.Column(db.String(20), nullable=True)
     tipo = db.Column(db.String(50), nullable=True)
 
+    ilhacoluna_id = db.Column(db.Integer, db.ForeignKey('ilhas_colunas.id'), nullable=False)
+    ilhacoluna = db.relationship('IlhaColuna', backref=db.backref('mapas', lazy=True))
+
     def __repr__(self):
         return f'<Mapa {self.nome} - ID: {self.id}, Banca: {self.banca_id}>'
-
 
 
 
@@ -115,4 +121,63 @@ def get_mapas():
 
     
 def get_frequencia_by_pavilhao(id_pavilhao):
-    return Pavilhao.query.get(id_pavilhao)
+    pavilhao = Pavilhao.query.get(id_pavilhao)
+    ilhas = IlhaColuna.query.filter_by(pavilhao_id=id_pavilhao).all()
+
+    for ilha in ilhas:
+        ilha.bancas_agrupadas = agrupar_bancas(ilha.bancas)
+
+    pavilhao.ilhas_colunas = ilhas  # garante compatibilidade com o template
+    return pavilhao
+
+
+
+def agrupar_bancas(bancas):
+    agrupadas = []
+    if not bancas:
+        return agrupadas
+
+    # Ordena as bancas por nome (convertido para inteiro)
+    bancas = sorted(bancas, key=lambda b: int(b.nome))
+
+    inicio = fim = bancas[0].nome
+    tipo = bancas[0].tipo
+    permissionario = bancas[0].permissionario
+
+    for atual in bancas[1:]:
+        if (
+            atual.tipo == tipo and
+            atual.permissionario == permissionario and
+            int(atual.nome) == int(fim) + 1
+        ):
+            fim = atual.nome
+        else:
+            agrupadas.append({
+                'intervalo': f"{inicio} à {fim}" if inicio != fim else str(inicio),
+                'tipo': tipo,
+                'permissionario': permissionario
+            })
+            inicio = fim = atual.nome
+            tipo = atual.tipo
+            permissionario = atual.permissionario
+
+    agrupadas.append({
+        'intervalo': f"{inicio} à {fim}" if inicio != fim else str(inicio),
+        'tipo': tipo,
+        'permissionario': permissionario
+    })
+
+    return agrupadas
+
+
+
+
+def get_mapa_by_ilhacoluna(id_ilhacoluna):
+    return Mapa.query.filter_by(ilhacoluna_id=id_ilhacoluna).all()
+
+
+def get_bancas_by_ilhacoluna(id_ilhacoluna):
+    return (Banca.query
+            .filter_by(ilha_coluna_id=id_ilhacoluna)
+            .order_by(cast(Banca.nome, Integer).asc())
+            .all())

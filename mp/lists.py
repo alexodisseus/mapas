@@ -24,6 +24,7 @@ lists = Blueprint('lists', __name__, url_prefix='/')
 
 
 
+
 ALLOWED_EXTENSIONS = {'csv'}
 
 def allowed_file(filename):
@@ -40,6 +41,7 @@ def list_lists():
     
 @lists.route('/frequencia/<int:id_pavilhao>')
 def list_frequencia(id_pavilhao):
+    
     data = model.get_frequencia_by_pavilhao(id_pavilhao)
     return render_template('lists/frequencia.html', data=data)
 
@@ -54,7 +56,8 @@ def list_mapas(id_pavilhao):
 @lists.route('/mapa/editar/<int:id_ilhacoluna>')
 def list_mapas_editar(id_ilhacoluna):
     data = model.get_mapa_by_ilhacoluna(id_ilhacoluna)
-    return render_template('lists/_mapas_editar.html', data=data)
+    bancas = model.get_bancas_by_ilhacoluna(id_ilhacoluna)
+    return render_template('lists/mapas_editar.html', data=data, bancas=bancas)
 
 
 
