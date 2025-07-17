@@ -1,7 +1,7 @@
 from flask_sqlalchemy import SQLAlchemy
 
+from sqlalchemy import case, func, cast, Integer
 
-from sqlalchemy import cast, Integer
 
 
 
@@ -115,19 +115,58 @@ def cadastrar_banca(pavilhao_nome, ilha_coluna_nome, banca_nome, tipo_contrato, 
 def list_all_mapas():
     return Pavilhao.query.all()
 
-
 def get_mapas():
-    return IlhaColuna.query.all()
+    data = IlhaColuna.query.all()
 
-    
+    def sort_key(item):
+        nome = item.nome.upper()
+        if nome.startswith("ILHA"):
+            grupo = 0
+        elif nome.startswith("COLUNA"):
+            grupo = 1
+        elif nome.startswith("ALIMENTAÇÃO"):
+            grupo = 2
+        else:
+            grupo = 99  # Para casos inesperados
+
+        # Extrai o número do nome (ex: "ILHA 2" → 2)
+        numeros = ''.join(filter(str.isdigit, nome))
+        numero = int(numeros) if numeros else 0
+
+        return (grupo, numero)
+
+    return sorted(data, key=sort_key)
+
+
+
 def get_frequencia_by_pavilhao(id_pavilhao):
     pavilhao = Pavilhao.query.get(id_pavilhao)
-    ilhas = IlhaColuna.query.filter_by(pavilhao_id=id_pavilhao).all()
+    if not pavilhao:
+        return None
+
+    prioridade = case(
+        (IlhaColuna.nome.like('ILHA -%'), 1),
+        (IlhaColuna.nome.like('COLUNA -%'), 2),
+        (IlhaColuna.nome.like('ALIMENTAÇÃO -%'), 3),
+        else_=4
+    )
+
+    numero_extraido = cast(
+        func.substr(IlhaColuna.nome, func.instr(IlhaColuna.nome, '-') + 2),
+        Integer
+    )
+
+    ilhas = (
+        IlhaColuna.query
+        .filter_by(pavilhao_id=id_pavilhao)
+        .order_by(prioridade, numero_extraido)
+        .all()
+    )
 
     for ilha in ilhas:
         ilha.bancas_agrupadas = agrupar_bancas(ilha.bancas)
 
-    pavilhao.ilhas_colunas = ilhas  # garante compatibilidade com o template
+    pavilhao.ilhas_colunas = ilhas
     return pavilhao
 
 
@@ -173,7 +212,7 @@ def agrupar_bancas(bancas):
 
 
 def get_mapa_by_ilhacoluna(id_ilhacoluna):
-    return Mapa.query.filter_by(ilhacoluna_id=id_ilhacoluna).all()
+    return IlhaColuna.query.filter_by(id=id_ilhacoluna).all()
 
 
 def get_bancas_by_ilhacoluna(id_ilhacoluna):
@@ -181,3 +220,114 @@ def get_bancas_by_ilhacoluna(id_ilhacoluna):
             .filter_by(ilha_coluna_id=id_ilhacoluna)
             .order_by(cast(Banca.nome, Integer).asc())
             .all())
+
+
+def set_mapas_cordenadas(linha, coluna, cor, banca_id=None, celula_id=None, ilhacoluna_id=None):
+    if ilhacoluna_id is None:
+        raise ValueError("ilhacoluna_id é obrigatório")
+
+    # Verifica se já existe um mapa com essa banca_id dentro da mesma ilhacoluna
+    mapa_existente_banca = None
+    if banca_id:
+        mapa_existente_banca = Mapa.query.filter_by(banca_id=banca_id, ilhacoluna_id=ilhacoluna_id).first()
+
+    if celula_id:
+        mapa = Mapa.query.get(celula_id)
+    else:
+        mapa = Mapa.query.filter_by(linha=linha, coluna=coluna, ilhacoluna_id=ilhacoluna_id).first()
+
+    if mapa_existente_banca and (not mapa or mapa_existente_banca.id != mapa.id):
+        # Atualiza o registro existente da banca para nova posição
+        mapa_existente_banca.linha = linha
+        mapa_existente_banca.coluna = coluna
+        mapa_existente_banca.cor = cor
+        mapa = mapa_existente_banca
+    elif mapa:
+        mapa.cor = cor
+        mapa.banca_id = banca_id
+    else:
+        # Cria novo mapa se não existir
+        mapa = Mapa(
+            linha=linha,
+            coluna=coluna,
+            cor=cor,
+            banca_id=banca_id,
+            ilhacoluna_id=ilhacoluna_id,
+            nome=f"{linha}-{coluna}"
+        )
+        db.session.add(mapa)
+
+    db.session.commit()
+    return mapa.id
+
+def set_mapas_cordenadas_delete(linha, coluna, ilhacoluna_id=None, celula_id=None):
+
+    if celula_id:
+        mapa = Mapa.query.get(celula_id)
+    else:
+        if ilhacoluna_id is None:
+            raise ValueError("ilhacoluna_id é necessário para identificar a célula")
+        mapa = Mapa.query.filter_by(linha=linha, coluna=coluna, ilhacoluna_id=ilhacoluna_id).first()
+
+    if mapa:
+        db.session.delete(mapa)
+        db.session.commit()
+
+def get_mapas_cordenadas(id_pavilhao=None, ilhacoluna_id=None):
+    """
+    Retorna mapas com suas coordenadas, filtrados por pavilhão e/ou ilha/coluna.
+    
+    Parâmetros:
+    - id_pavilhao: ID do pavilhão (filtra todos os mapas deste pavilhão)
+    - ilhacoluna_id: ID específico de uma ilha/coluna
+    
+    Retorna:
+    - Lista de dicionários com informações dos mapas e suas coordenadas
+    """
+    # Construção da query base
+    query = db.session.query(
+        Mapa,
+        IlhaColuna,
+        Pavilhao
+    ).join(
+        IlhaColuna, Mapa.ilhacoluna_id == IlhaColuna.id
+    ).join(
+        Pavilhao, IlhaColuna.pavilhao_id == Pavilhao.id
+    )
+    
+    # Aplicação dos filtros
+    if id_pavilhao is not None:
+        query = query.filter(Pavilhao.id == id_pavilhao)
+    
+    if ilhacoluna_id is not None:
+        query = query.filter(IlhaColuna.id == ilhacoluna_id)
+    
+    # Execução da query e formatação dos resultados
+    resultados = query.all()
+    
+    # Formatando os resultados em uma estrutura mais útil
+    mapas_formatados = []
+    for mapa, ilha, pavilhao in resultados:
+        mapas_formatados.append({
+            'mapa_id': mapa.id,
+            'mapa_nome': mapa.nome,
+            'banca_id': mapa.banca_id,
+            'banca_nome': mapa.banca.nome if mapa.banca else None,
+            'coordenadas': {
+                'coluna': mapa.coluna,
+                'linha': mapa.linha,
+                'cor': mapa.cor,
+                'tipo': mapa.tipo
+            },
+            'ilha_coluna': {
+                'id': ilha.id,
+                'nome': ilha.nome
+            },
+            'pavilhao': {
+                'id': pavilhao.id,
+                'nome': pavilhao.nome
+            }
+        })
+    
+    return mapas_formatados
+

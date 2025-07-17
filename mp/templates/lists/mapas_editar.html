@@ -3,11 +3,145 @@
 {% block styles %}
     <link rel="stylesheet" href="{{ url_for('static', filename='index.css') }}">
     <link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet">
+    <style>
+        .content-area {
+            padding-bottom: 250px; /* Espaço para o painel fixo */
+        }
+        
+        .grid-map {
+            border-collapse: collapse;
+            width: 100%;
+            margin-bottom: 20px;
+        }
+        
+        .grid-map td {
+            border: 1px solid #ddd;
+            padding: 8px;
+            text-align: center;
+            vertical-align: middle;
+            height: 60px;
+            transition: all 0.3s ease;
+            cursor: pointer;
+        }
+        
+        .grid-map td:hover {
+            transform: scale(1.05);
+            box-shadow: 0 0 10px rgba(0,0,0,0.2);
+            z-index: 10;
+        }
+        
+        .grid-map td.selected {
+            box-shadow: 0 0 0 3px #2196F3;
+        }
+        
+        .grid-map .occupied {
+            font-weight: bold;
+        }
+        
+        .empty-cell {
+            color: #999;
+            font-style: italic;
+        }
+        
+        .edit-panel {
+            position: fixed;
+            bottom: 0;
+            left: 0;
+            right: 0;
+            background: #fff;
+            padding: 15px;
+            box-shadow: 0 -2px 10px rgba(0,0,0,0.1);
+            border-top: 1px solid #ddd;
+            z-index: 1000;
+            display: flex;
+            gap: 20px;
+            align-items: center;
+        }
+        
+        .edit-panel-content {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 15px;
+            width: 100%;
+            max-width: 1200px;
+            margin: 0 auto;
+        }
+        
+        .edit-panel-section {
+            flex: 1;
+            min-width: 250px;
+        }
+        
+        .edit-panel h4 {
+            margin-top: 0;
+            margin-bottom: 10px;
+            color: #555;
+        }
+        
+        .form-group {
+            margin-bottom: 10px;
+        }
+        
+        .form-group label {
+            display: block;
+            margin-bottom: 5px;
+            font-weight: bold;
+            font-size: 0.9em;
+        }
+        
+        .form-control {
+            width: 100%;
+            padding: 8px;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+        }
+        
+        .btn {
+            padding: 8px 15px;
+            background: #4CAF50;
+            color: white;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            transition: background 0.3s;
+        }
+        
+        .btn:hover {
+            background: #45a049;
+        }
+        
+        .btn-danger {
+            background: #f44336;
+        }
+        
+        .btn-danger:hover {
+            background: #d32f2f;
+        }
+        
+        .toast {
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            padding: 15px;
+            background: #4CAF50;
+            color: white;
+            border-radius: 4px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.2);
+            z-index: 1100;
+            display: none;
+        }
+        
+        .toast.error {
+            background: #f44336;
+        }
+    </style>
 {% endblock %}
 
 {% block content %}
 <div class="content-area">
-    <h3>Editar Mapa da Ilha: {{ data[0].ilhacoluna.nome if data else '---' }}</h3>
+    <input type="hidden" id="ilhacoluna-id" value="{{ data[0].id }}">
+
+    <h3>Editar Mapa da Ilha: {{ data[0].nome}}</h3>
 
     <table class="grid-map">
         <tbody>
@@ -20,16 +154,19 @@
                             | list 
                             | first 
                         %}
-                        <td style="background-color: {{ celula.cor if celula else '#f5f5f5' }};">
+                        <td class="map-cell {% if celula %}occupied{% endif %}" 
+                            style="background-color: {{ celula.cor if celula else '#f5f5f5' }};"
+                            data-linha="{{ linha }}"
+                            data-coluna="{{ coluna }}"
+                            data-celula-id="{{ celula.id if celula else '' }}">
                             {% if celula %}
-                                <div>
-                                    <strong>{{ celula.nome }}</strong><br>
+                                <div class="cell-content">
                                     {% if celula.banca %}
-                                        {{ celula.banca.nome }}
+                                        <small>{{ celula.banca.nome }}</small>
                                     {% endif %}
                                 </div>
                             {% else %}
-                                {{ coluna }}
+                                <span class="empty-cell">0</span>
                             {% endif %}
                         </td>
                     {% endfor %}
@@ -37,14 +174,16 @@
             {% endfor %}
         </tbody>
     </table>
+
+    
     <br>
     <h3>Bancas da Ilha</h3>
 
     <table class="grid-bancas">
         <thead>
             <tr>
-                <th colspan="3">Permissionário</th>
-                <th>banca</th>
+                <th>Permissionário</th>
+                <th>Banca</th>
                 <th>Tipo</th>
                 <th>Alocado</th>
             </tr>
@@ -52,14 +191,205 @@
         <tbody>
             {% for banca in bancas %}
             <tr>
-                <td colspan="3" class="perm">{{ banca.permissionario }}</td>
+                <td>{{ banca.permissionario }}</td>
                 <td>{{ banca.nome }}</td>
                 <td>{{ banca.tipo }}</td>
-                <td>{{ banca.id }}</td>
+                <td>{{ 'Sim' if banca.id else 'Não' }}</td>
+            </tr>
+            {% else %}
+            <tr>
+                <td colspan="4" class="empty-cell">Nenhuma banca cadastrada</td>
             </tr>
             {% endfor %}
         </tbody>
     </table>
+</div>
 
+<!-- Painel de edição fixo -->
+<div class="edit-panel">
+<div class="edit-panel-content">
+    <div class="edit-panel-section">
+        <h4>Associar Banca</h4>
+        <div class="form-group">
+            <label for="cell-banca">Banca:</label>
+            <select id="cell-banca" class="form-control">
+                <option value="">-- Selecione --</option>
+                {% for banca in bancas %}
+                <option value="{{ banca.id }}">{{ banca.nome }} ({{ banca.permissionario }})</option>
+                {% endfor %}
+            </select>
+        </div>
     </div>
+
+    <div class="edit-panel-section">
+        <h4>Editar Célula</h4>
+        <div class="form-group">
+            <label for="cell-color">Cor:</label>
+            <input type="color" id="cell-color" class="form-control" value="#f5f5f5">
+        </div>
+    </div>
+
+    <div class="edit-panel-section" style="align-self: flex-end;">
+        <button id="btn-save" class="btn">Salvar Alterações</button>
+        <button id="btn-clear" class="btn btn-danger">Limpar Célula</button>
+    </div>
+</div>
+</div>
+
+<!-- Toast para feedback -->
+<div id="toast" class="toast"></div>
+
+<script>
+    // Função para mostrar feedback
+    function showToast(message, isError = false) {
+        const toast = document.getElementById('toast');
+        toast.textContent = message;
+        toast.style.display = 'block';
+        toast.className = isError ? 'toast error' : 'toast';
+        
+        setTimeout(() => {
+            toast.style.display = 'none';
+        }, 3000);
+    }
+
+    // Função para converter RGB para HEX
+    function rgbToHex(rgb) {
+        if (rgb.startsWith('#')) return rgb;
+
+        const rgbValues = rgb.match(/\d+/g);
+        if (!rgbValues || rgbValues.length < 3) return '#f5f5f5';
+
+        return '#' + ((1 << 24) + (parseInt(rgbValues[0]) << 16) +
+                     (parseInt(rgbValues[1]) << 8) + parseInt(rgbValues[2])
+                     ).toString(16).slice(1).toUpperCase();
+    }
+
+    // Seleção de células
+    document.querySelectorAll('.map-cell').forEach(cell => {
+        cell.addEventListener('click', function () {
+            // Mantém a seleção visual (adiciona 'selected' apenas na célula clicada)
+            document.querySelectorAll('.map-cell').forEach(c => c.classList.remove('selected'));
+            this.classList.add('selected');
+
+            // Avança para a próxima opção do select
+            const bancaSelect = document.getElementById('cell-banca');
+            if (bancaSelect) {
+                const nextIndex = (bancaSelect.selectedIndex + 1) % bancaSelect.options.length;
+                bancaSelect.selectedIndex = nextIndex;
+            }
+        });
+    });
+
+    // Salvar alterações
+    // Função principal que vamos reutilizar
+async function saveCell() {
+    const selectedCell = document.querySelector('.map-cell.selected');
+    const ilhacolunaId = document.getElementById('ilhacoluna-id').value;
+
+    if (!selectedCell) {
+        showToast('Selecione uma célula primeiro', true);
+        return;
+    }
+
+    const cellData = {
+        linha: selectedCell.dataset.linha,
+        coluna: selectedCell.dataset.coluna,
+        cor: document.getElementById('cell-color').value,
+        banca_id: document.getElementById('cell-banca').value || null,
+        celula_id: selectedCell.dataset.celulaId || null,
+        ilhacoluna_id: ilhacolunaId
+    };
+
+    try {
+        const response = await fetch("{{ url_for('lists.salvar_celula') }}", {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(cellData)
+        });
+
+        const result = await response.json();
+
+        if (response.ok) {
+            showToast('Alterações salvas com sucesso!');
+            selectedCell.style.backgroundColor = cellData.cor;
+            selectedCell.dataset.celulaId = result.celula_id || '';
+
+            if (cellData.banca_id) {
+                const select = document.getElementById('cell-banca');
+                const selectedOption = select.options[select.selectedIndex];
+                const bancaName = selectedOption.text.split('(')[0].trim();
+
+                selectedCell.innerHTML = `
+                    <div class="cell-content">
+                        <small>${bancaName}</small>
+                    </div>
+                `;
+                selectedCell.classList.add('occupied');
+            }
+        } else {
+            throw new Error(result.message || 'Erro ao salvar');
+        }
+    } catch (error) {
+        showToast(error.message, true);
+        console.error('Erro:', error);
+    }
+}
+
+// Listener para o botão
+document.getElementById('btn-save').addEventListener('click', saveCell);
+
+// Listener para a tecla Enter em qualquer lugar do documento
+document.addEventListener('keydown', function(event) {
+    if (event.key === 'Enter') {
+        saveCell();
+    }
+});
+
+    // Limpar célula
+    document.getElementById('btn-clear').addEventListener('click', async function () {
+        const selectedCell = document.querySelector('.map-cell.selected');
+        const ilhacolunaId = document.getElementById('ilhacoluna-id').value;
+
+        if (!selectedCell) {
+            showToast('Selecione uma célula primeiro', true);
+            return;
+        }
+
+        if (!confirm('Tem certeza que deseja limpar esta célula?')) return;
+
+        const cellData = {
+            linha: selectedCell.dataset.linha,
+            coluna: selectedCell.dataset.coluna,
+            limpar: true,
+            celula_id: selectedCell.dataset.celulaId || null,
+            ilhacoluna_id: ilhacolunaId
+        };
+
+        try {
+            const response = await fetch("{{ url_for('lists.salvar_celula') }}", {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(cellData)
+            });
+
+            const result = await response.json();
+
+            if (response.ok) {
+                showToast('Célula limpa com sucesso!');
+                selectedCell.style.backgroundColor = '#f5f5f5';
+                selectedCell.innerHTML = '<span class="empty-cell">Vazio</span>';
+                selectedCell.classList.remove('occupied');
+                selectedCell.dataset.celulaId = '';
+                document.getElementById('cell-color').value = '#f5f5f5';
+                document.getElementById('cell-banca').selectedIndex = 0;
+            } else {
+                throw new Error(result.message || 'Erro ao limpar');
+            }
+        } catch (error) {
+            showToast(error.message, true);
+            console.error('Erro:', error);
+        }
+    });
+
+</script>
 {% endblock %}

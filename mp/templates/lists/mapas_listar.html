@@ -1,0 +1,27 @@
+{% extends "base.html" %}
+
+{% block styles %}
+    <link rel="stylesheet" href="{{ url_for('static', filename='index.css') }}">
+    <link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet">
+
+{% endblock %}
+
+{% block content %}
+    
+<div class="content-area">
+    <h3>Mapa </h3>
+    {{cordenadas}}
+    {% for ilha in data %}
+    <ul class="list" id="list">
+        <li>
+            <span>{{ ilha.nome }}</span>
+            <div class="button-group">
+                <a href="{{ url_for('lists.list_mapas_editar', id_ilhacoluna = ilha.id) }}">Editar</a>
+            </div>
+        </li>
+    </ul>
+
+{% endfor %}
+
+</div>
+{% endblock %}

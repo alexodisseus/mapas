@@ -1,6 +1,12 @@
 from flask import Flask
 from flask import Blueprint, render_template, request, session, redirect, url_for, flash
 
+
+from flask import request, jsonify
+
+
+
+
 import model
 
 from datetime import datetime
@@ -49,7 +55,19 @@ def list_frequencia(id_pavilhao):
 @lists.route('/mapa/<int:id_pavilhao>')
 def list_mapas(id_pavilhao):
     data = model.get_mapas()
-    return render_template('lists/mapas.html', data=data)
+    cordenadas = model.get_mapas_cordenadas(id_pavilhao)
+
+    return render_template('lists/mapas.html', data=cordenadas , cordenadas = cordenadas)
+
+
+@lists.route('/mapa/listar')
+def list_mapas_listar():
+    data = model.get_mapas()
+
+    return render_template('lists/mapas_listar.html', data=data)
+
+
+
 
 
 
@@ -57,6 +75,10 @@ def list_mapas(id_pavilhao):
 def list_mapas_editar(id_ilhacoluna):
     data = model.get_mapa_by_ilhacoluna(id_ilhacoluna)
     bancas = model.get_bancas_by_ilhacoluna(id_ilhacoluna)
+    """
+    print(bancas[0])
+    cordenadas_ilha = model.get_mapas_cordenadas(id_pavilhao,id_ilhacoluna)
+    """
     return render_template('lists/mapas_editar.html', data=data, bancas=bancas)
 
 
@@ -161,6 +183,94 @@ def create_list():
     
     
 
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+@lists.route('/salvar_celula', methods=['POST'])
+def salvar_celula():
+    try:
+        data = request.get_json()
+        print("DADOS RECEBIDOS:", data)
+        # Verifica se é para limpar a célula
+        if data.get('limpar'):
+            """
+            # Lógica para limpar a célula no banco de dados
+            celula = Celula.query.filter_by(
+                linha=data['linha'],
+                coluna=data['coluna']
+            ).first()
+            
+            if celula:
+                db.session.delete(celula)
+                db.session.commit()
+            return jsonify({'success': True})
+            """
+            model.set_mapas_cordenadas_delete()
+
+        # Lógica para salvar/atualizar a célula
+
+        """
+        celula = Celula.query.filter_by(
+            linha=data['linha'],
+            coluna=data['coluna']
+        ).first()
+        
+        if celula:
+            # Atualiza célula existente
+            celula.nome = data['nome']
+            celula.cor = data['cor']
+            celula.banca_id = data['banca_id']
+        else:
+            # Cria nova célula
+            celula = Celula(
+                linha=data['linha'],
+                coluna=data['coluna'],
+                nome=data['nome'],
+                cor=data['cor'],
+                banca_id=data['banca_id'],
+                ilha_id=data.get('ilha_id')  # Adicione conforme necessário
+            )
+            db.session.add(celula)
+        
+        print(celula)
+        
+        db.session.commit()
+        """
+        model.set_mapas_cordenadas(linha=data['linha'],
+                coluna=data['coluna'],
+                
+                cor=data['cor'],
+                banca_id=data['banca_id'],
+                celula_id=data['celula_id'],
+                ilhacoluna_id=data['ilhacoluna_id'])
+
+        return jsonify({
+            'success': True,
+            'celula_id': data['celula_id']
+        })
+        
+    except Exception as e:
+        #db.session.rollback()
+        return jsonify({
+            'success': False,
+            'message': str(e)
+        }), 400
 
 # Função para configurar o blueprint
 def configure(app):

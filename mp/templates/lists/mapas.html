@@ -3,39 +3,114 @@
 {% block styles %}
     <link rel="stylesheet" href="{{ url_for('static', filename='index.css') }}">
     <link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet">
-
+    <style>
+        .grid-map {
+            border-collapse: collapse;
+            width: 100%;
+            margin-top: 20px;
+            table-layout: fixed;
+        }
+        
+        .grid-map td {
+            border: 1px solid #ddd;
+            height: 40px;
+            position: relative;
+            text-align: center;
+            padding: 2px;
+        }
+        
+        .map-cell {
+            width: 100%;
+            height: 100%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 10px;
+            cursor: pointer;
+            border-radius: 3px;
+            font-weight: bold;
+            color: #333;
+        }
+        
+        .ilha-header {
+            background-color: #f0f0f0;
+            padding: 10px;
+            margin: 15px 0;
+            border-left: 4px solid #666;
+        }
+        
+        .ilha-container {
+            margin-bottom: 30px;
+        }
+        
+        .coord-label {
+            position: absolute;
+            font-size: 8px;
+            color: #999;
+            bottom: 1px;
+            right: 2px;
+        }
+    </style>
 {% endblock %}
 
 {% block content %}
-	
 <div class="content-area">
-    <h3>Mapa </h3>
-
-    {% for ilha in data %}
-    <ul class="list" id="list">
-        <li>
-            <span>{{ ilha.nome }}</span>
-            <div class="button-group">
-                <a href="{{ url_for('lists.list_mapas_editar', id_ilhacoluna = ilha.id) }}">Editar</a>
-            </div>
-        </li>
-    </ul>
-
-    <table class="grid-map">
-        <tbody>
-            {% for linha in range(10) %}
-                <tr>
-                    {% for coluna in range(20) %}
-                        <td>{{coluna}}
-                            <!-- Aqui você pode checar se existe um mapa correspondente a linha/coluna -->
-                        </td>
-                    {% endfor %}
-                </tr>
+    <h3>Mapa do Pavilhão: {{ data[0].pavilhao.nome if data else '' }}</h3>
+    
+    {# Agrupa bancas por ilha #}
+    {% set ilhas = {} %}
+    {% for item in data %}
+        {% if item.ilha_coluna.id not in ilhas %}
+            {% set _ = ilhas.update({item.ilha_coluna.id: {'nome': item.ilha_coluna.nome, 'bancas': []}}) %}
+        {% endif %}
+        {% set _ = ilhas[item.ilha_coluna.id].bancas.append(item) %}
+    {% endfor %}
+    
+    {# Para cada ilha #}
+    {% for ilha_id, ilha in ilhas.items() %}
+    <div class="ilha-container">
+        <div class="ilha-header">
+            <h4>{{ ilha.nome }}</h4>
+            <small>Total de Bancas: {{ ilha.bancas|length }}</small>
+        </div>
+        
+        <table class="grid-map">
+            <tbody>
+                {% for linha in range(10) %}
+                    <tr>
+                        {% for coluna in range(20) %}
+                            <td>
+                                {% for banca in ilha.bancas %}
+                                    {% if banca.coordenadas.linha == linha|string and banca.coordenadas.coluna == coluna|string %}
+                                        <div class="map-cell" 
+                                             style="background-color: {{ banca.coordenadas.cor }};"
+                                             title="Banca {{ banca.banca_nome }} | {{ ilha.nome }}
+Coord: {{ linha }}-{{ coluna }}
+Pavilhão: {{ banca.pavilhao.nome }}">
+                                            {{ banca.banca_nome }}
+                                            <span class="coord-label">{{ linha }}-{{ coluna }}</span>
+                                        </div>
+                                    {% endif %}
+                                {% endfor %}
+                            </td>
+                        {% endfor %}
+                    </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+    {% endfor %}
+    
+    <div class="map-legend" style="margin-top: 20px;">
+        <h4>Legenda:</h4>
+        <div style="display: flex; gap: 15px; flex-wrap: wrap;">
+            {% for cor, tipo in {'#f5f5f5': 'Normal', '#ed333b': 'Especial', '#f6d32d': 'Destaque'}.items() %}
+                <div>
+                    <span style="display: inline-block; width: 15px; height: 15px; background-color: {{ cor }}; border: 1px solid #ccc;"></span> 
+                    Banca {{ tipo }}
+                </div>
             {% endfor %}
-        </tbody>
-    </table>
-    <br>
-{% endfor %}
-
+        </div>
+    </div>
 </div>
 {% endblock %}

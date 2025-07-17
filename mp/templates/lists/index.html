@@ -15,7 +15,8 @@
                 <span>{{ pavilhao.nome }}</span>
                 <div class="button-group">
                     <a href="{{ url_for('lists.list_frequencia', id_pavilhao=pavilhao.id) }}">Frequência</a>
-                    <a href="{{ url_for('lists.list_mapas', id_pavilhao=pavilhao.id) }}">Mapa</a>
+                    <a href="{{ url_for('lists.list_mapas', id_pavilhao=pavilhao.id) }}">Mapa completo</a>
+                    <a href="{{ url_for('lists.list_mapas_listar', id_pavilhao=pavilhao.id) }}">Listar ilhas</a>
                 </div>
             </li>
         {% endfor %}
@@ -26,4 +27,5 @@
             <span class="material-icons">add</span> Criar nova lista
         </a>
     </div>
+
 {% endblock %}
