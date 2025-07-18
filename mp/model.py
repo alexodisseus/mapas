@@ -1,6 +1,8 @@
 from flask_sqlalchemy import SQLAlchemy
 
 from sqlalchemy import case, func, cast, Integer
+from sqlalchemy.orm import joinedload
+
 
 
 
@@ -115,8 +117,9 @@ def cadastrar_banca(pavilhao_nome, ilha_coluna_nome, banca_nome, tipo_contrato, 
 def list_all_mapas():
     return Pavilhao.query.all()
 
-def get_mapas():
-    data = IlhaColuna.query.all()
+def get_mapas(id_pavilhao):
+    data = IlhaColuna.query.filter_by(pavilhao_id=id_pavilhao).all()
+
 
     def sort_key(item):
         nome = item.nome.upper()
@@ -215,12 +218,18 @@ def get_mapa_by_ilhacoluna(id_ilhacoluna):
     return IlhaColuna.query.filter_by(id=id_ilhacoluna).all()
 
 
-def get_bancas_by_ilhacoluna(id_ilhacoluna):
-    return (Banca.query
-            .filter_by(ilha_coluna_id=id_ilhacoluna)
-            .order_by(cast(Banca.nome, Integer).asc())
-            .all())
 
+def get_bancas_by_ilhacoluna(id_ilhacoluna, id_pavilhao):
+    return (
+        Banca.query
+        .join(IlhaColuna)
+        .filter(
+            Banca.ilha_coluna_id == id_ilhacoluna,
+            IlhaColuna.pavilhao_id == id_pavilhao
+        )
+        .order_by(cast(Banca.nome, Integer).asc())
+        .all()
+    )
 
 def set_mapas_cordenadas(linha, coluna, cor, banca_id=None, celula_id=None, ilhacoluna_id=None):
     if ilhacoluna_id is None:
@@ -331,3 +340,5 @@ def get_mapas_cordenadas(id_pavilhao=None, ilhacoluna_id=None):
         })
 
     return mapas_formatados
+
+

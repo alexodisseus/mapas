@@ -16,7 +16,7 @@
         <li>
             <span>{{ ilha.nome }}</span>
             <div class="button-group">
-                <a href="{{ url_for('lists.list_mapas_editar', id_ilhacoluna = ilha.id) }}">Editar</a>
+                <a href="{{ url_for('lists.list_mapas_editar', id_ilhacoluna = ilha.id, id_pavilhao=ilha.pavilhao_id) }}">Editar</a>
             </div>
         </li>
     </ul>

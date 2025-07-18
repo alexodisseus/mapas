@@ -54,7 +54,7 @@ def list_frequencia(id_pavilhao):
 
 @lists.route('/mapa/<int:id_pavilhao>')
 def list_mapas(id_pavilhao):
-    data = model.get_mapas()
+    data = model.get_mapas(id_pavilhao)
     cordenadas = model.get_mapas_cordenadas(id_pavilhao)
 
     return render_template('lists/mapas.html', data=data , cordenadas = cordenadas)
@@ -62,8 +62,8 @@ def list_mapas(id_pavilhao):
 
 @lists.route('/mapa/listar')
 def list_mapas_listar():
-    data = model.get_mapas()
-
+    id_pavilhao = request.args.get('id_pavilhao', type=int)
+    data = model.get_mapas( id_pavilhao )
     return render_template('lists/mapas_listar.html', data=data)
 
 
@@ -73,8 +73,10 @@ def list_mapas_listar():
 
 @lists.route('/mapa/editar/<int:id_ilhacoluna>')
 def list_mapas_editar(id_ilhacoluna):
+
+    id_pavilhao = request.args.get('id_pavilhao', type=int)
     data = model.get_mapa_by_ilhacoluna(id_ilhacoluna)
-    bancas = model.get_bancas_by_ilhacoluna(id_ilhacoluna)
+    bancas = model.get_bancas_by_ilhacoluna(id_ilhacoluna , id_pavilhao)
     """
     print(bancas[0])
     cordenadas_ilha = model.get_mapas_cordenadas(id_pavilhao,id_ilhacoluna)
@@ -185,23 +187,6 @@ def create_list():
 
 
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 @lists.route('/salvar_celula', methods=['POST'])
 def salvar_celula():
     try:
@@ -271,6 +256,16 @@ def salvar_celula():
             'success': False,
             'message': str(e)
         }), 400
+
+
+
+
+
+
+
+
+
+
 
 # Função para configurar o blueprint
 def configure(app):
