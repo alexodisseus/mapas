@@ -57,7 +57,7 @@ def list_mapas(id_pavilhao):
     data = model.get_mapas()
     cordenadas = model.get_mapas_cordenadas(id_pavilhao)
 
-    return render_template('lists/mapas.html', data=cordenadas , cordenadas = cordenadas)
+    return render_template('lists/mapas.html', data=data , cordenadas = cordenadas)
 
 
 @lists.route('/mapa/listar')

@@ -273,18 +273,15 @@ def set_mapas_cordenadas_delete(linha, coluna, ilhacoluna_id=None, celula_id=Non
         db.session.delete(mapa)
         db.session.commit()
 
+
 def get_mapas_cordenadas(id_pavilhao=None, ilhacoluna_id=None):
-    """
-    Retorna mapas com suas coordenadas, filtrados por pavilhão e/ou ilha/coluna.
-    
-    Parâmetros:
-    - id_pavilhao: ID do pavilhão (filtra todos os mapas deste pavilhão)
-    - ilhacoluna_id: ID específico de uma ilha/coluna
-    
-    Retorna:
-    - Lista de dicionários com informações dos mapas e suas coordenadas
-    """
-    # Construção da query base
+    from sqlalchemy.orm import joinedload
+    import re
+
+    def extrair_numero(nome):
+        match = re.search(r'(\d+)$', nome)
+        return int(match.group(1)) if match else 0
+
     query = db.session.query(
         Mapa,
         IlhaColuna,
@@ -293,19 +290,22 @@ def get_mapas_cordenadas(id_pavilhao=None, ilhacoluna_id=None):
         IlhaColuna, Mapa.ilhacoluna_id == IlhaColuna.id
     ).join(
         Pavilhao, IlhaColuna.pavilhao_id == Pavilhao.id
+    ).options(
+        joinedload(Mapa.banca)
     )
-    
-    # Aplicação dos filtros
+
     if id_pavilhao is not None:
         query = query.filter(Pavilhao.id == id_pavilhao)
-    
+
     if ilhacoluna_id is not None:
         query = query.filter(IlhaColuna.id == ilhacoluna_id)
-    
-    # Execução da query e formatação dos resultados
+
+    # Removemos a ordenação SQL porque vamos ordenar no Python
     resultados = query.all()
-    
-    # Formatando os resultados em uma estrutura mais útil
+
+    # Ordenação numérica por IlhaColuna.nome + linha + coluna
+    resultados.sort(key=lambda x: (extrair_numero(x[1].nome), x[0].linha, x[0].coluna))
+
     mapas_formatados = []
     for mapa, ilha, pavilhao in resultados:
         mapas_formatados.append({
@@ -313,6 +313,7 @@ def get_mapas_cordenadas(id_pavilhao=None, ilhacoluna_id=None):
             'mapa_nome': mapa.nome,
             'banca_id': mapa.banca_id,
             'banca_nome': mapa.banca.nome if mapa.banca else None,
+            'permissionario': mapa.banca.permissionario if mapa.banca else None,
             'coordenadas': {
                 'coluna': mapa.coluna,
                 'linha': mapa.linha,
@@ -328,6 +329,5 @@ def get_mapas_cordenadas(id_pavilhao=None, ilhacoluna_id=None):
                 'nome': pavilhao.nome
             }
         })
-    
-    return mapas_formatados
 
+    return mapas_formatados

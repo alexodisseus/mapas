@@ -52,14 +52,14 @@
         }
     </style>
 {% endblock %}
-
 {% block content %}
+
 <div class="content-area">
-    <h3>Mapa do Pavilhão: {{ data[0].pavilhao.nome if data else '' }}</h3>
+    <h3>Mapa do Pavilhão: {{ cordenadas[0].pavilhao.nome if cordenadas else '' }}</h3>
     
     {# Agrupa bancas por ilha #}
     {% set ilhas = {} %}
-    {% for item in data %}
+    {% for item in cordenadas %}
         {% if item.ilha_coluna.id not in ilhas %}
             {% set _ = ilhas.update({item.ilha_coluna.id: {'nome': item.ilha_coluna.nome, 'bancas': []}}) %}
         {% endif %}
@@ -70,10 +70,27 @@
     {% for ilha_id, ilha in ilhas.items() %}
     <div class="ilha-container">
         <div class="ilha-header">
-            <h4>{{ ilha.nome }}</h4>
-            <small>Total de Bancas: {{ ilha.bancas|length }}</small>
-        </div>
-        
+    <h4>{{ ilha.nome }}</h4>
+    <small>Total de Bancas: {{ ilha.bancas|length }}</small><br>
+
+    <div style="margin-top: 8px;">
+    <strong>Legenda:</strong>
+    <div style="display: flex; flex-wrap: wrap; gap: 12px; margin-top: 4px;">
+        {% set nomes_legenda = [] %}
+        {% for banca in ilha.bancas %}
+            {% if banca.permissionario not in nomes_legenda %}
+                {% set _ = nomes_legenda.append(banca.permissionario) %}
+                <div style="display: flex; align-items: center; gap: 6px; font-size: 12px;">
+                    <span style="width: 14px; height: 14px; background-color: {{ banca.coordenadas.cor }}; border: 1px solid #999; display: inline-block;"></span>
+                    <span>{{ banca.permissionario }}</span>
+                </div>
+            {% endif %}
+        {% endfor %}
+    </div>
+</div>
+
+</div>
+
         <table class="grid-map">
             <tbody>
                 {% for linha in range(10) %}
@@ -101,16 +118,6 @@ Pavilhão: {{ banca.pavilhao.nome }}">
     </div>
     {% endfor %}
     
-    <div class="map-legend" style="margin-top: 20px;">
-        <h4>Legenda:</h4>
-        <div style="display: flex; gap: 15px; flex-wrap: wrap;">
-            {% for cor, tipo in {'#f5f5f5': 'Normal', '#ed333b': 'Especial', '#f6d32d': 'Destaque'}.items() %}
-                <div>
-                    <span style="display: inline-block; width: 15px; height: 15px; background-color: {{ cor }}; border: 1px solid #ccc;"></span> 
-                    Banca {{ tipo }}
-                </div>
-            {% endfor %}
-        </div>
-    </div>
+    
 </div>
 {% endblock %}
